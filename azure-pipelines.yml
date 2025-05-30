@@ -5,15 +5,17 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  TF_VERSION: '1.7.5'       # Use your preferred Terraform version
-  TF_WORKING_DIR: './terraform'  # Update if your .tf files are in a subfolder
+  TF_VERSION: '1.7.5'
+  TF_WORKING_DIR: './terraform'  # change if your .tf files are in another directory
 
 steps:
 
-# Step 1: Install Terraform
-- task: UseTerraform@0
-  inputs:
-    terraformVersion: '$(TF_VERSION)'
+# Step 1: Install Terraform manually
+- script: |
+    sudo wget https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+    sudo unzip terraform_${TF_VERSION}_linux_amd64.zip -d /usr/local/bin/
+    terraform version
+  displayName: 'Install Terraform'
 
 # Step 2: Checkout your code
 - checkout: self
@@ -38,7 +40,7 @@ steps:
     terraform -chdir=$(TF_WORKING_DIR) plan -out=tfplan
   displayName: 'Terraform Plan'
 
-# Step 7 (Optional): Terraform Apply (if you want auto-deploy)
+# Step 7 (Optional): Apply
 # - script: |
 #     terraform -chdir=$(TF_WORKING_DIR) apply -auto-approve tfplan
 #   displayName: 'Terraform Apply'
