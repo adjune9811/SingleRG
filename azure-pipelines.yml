@@ -1,0 +1,44 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  TF_VERSION: '1.7.5'       # Use your preferred Terraform version
+  TF_WORKING_DIR: './terraform'  # Update if your .tf files are in a subfolder
+
+steps:
+
+# Step 1: Install Terraform
+- task: UseTerraform@0
+  inputs:
+    terraformVersion: '$(TF_VERSION)'
+
+# Step 2: Checkout your code
+- checkout: self
+
+# Step 3: Terraform Init
+- script: |
+    terraform -chdir=$(TF_WORKING_DIR) init
+  displayName: 'Terraform Init'
+
+# Step 4: Terraform Format Check
+- script: |
+    terraform -chdir=$(TF_WORKING_DIR) fmt -check
+  displayName: 'Terraform Format Check'
+
+# Step 5: Terraform Validate
+- script: |
+    terraform -chdir=$(TF_WORKING_DIR) validate
+  displayName: 'Terraform Validate'
+
+# Step 6: Terraform Plan
+- script: |
+    terraform -chdir=$(TF_WORKING_DIR) plan -out=tfplan
+  displayName: 'Terraform Plan'
+
+# Step 7 (Optional): Terraform Apply (if you want auto-deploy)
+# - script: |
+#     terraform -chdir=$(TF_WORKING_DIR) apply -auto-approve tfplan
+#   displayName: 'Terraform Apply'
