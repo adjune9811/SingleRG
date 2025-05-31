@@ -5,12 +5,12 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  TF_VERSION: '1.7.5'
+  TF_VERSION: '1.12.1'
   TF_WORKING_DIR: './terraform'  # change if your .tf files are in another directory
 
 steps:
 
-# Step 1: Install Terraform
+# Step 1: Install Terraform v1.12.1
 - script: |
     sudo wget https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
     sudo unzip terraform_${TF_VERSION}_linux_amd64.zip -d /usr/local/bin/
@@ -23,11 +23,11 @@ steps:
 # Step 3: Login to Azure using your Service Principal
 - task: AzureCLI@2
   inputs:
-    azureSubscription: 'AZ-SPN-idmay25'  # 🔐 Using your SPN service connection
+    azureSubscription: 'AZ-SPN-idmay25'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "✅ Successfully logged in to Azure using SPN"
+      echo "✅ Logged in to Azure using SPN"
   displayName: 'Login to Azure with Service Principal'
 
 # Step 4: Terraform Init
