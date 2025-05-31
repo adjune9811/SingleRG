@@ -10,37 +10,47 @@ variables:
 
 steps:
 
-# Step 1: Install Terraform manually
+# Step 1: Install Terraform
 - script: |
     sudo wget https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
     sudo unzip terraform_${TF_VERSION}_linux_amd64.zip -d /usr/local/bin/
     terraform version
   displayName: 'Install Terraform'
 
-# Step 2: Checkout your code
+# Step 2: Checkout Code
 - checkout: self
 
-# Step 3: Terraform Init
+# Step 3: Login to Azure using your Service Principal
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'AZ-SPN-idmay25'  # 🔐 Using your SPN service connection
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "✅ Successfully logged in to Azure using SPN"
+  displayName: 'Login to Azure with Service Principal'
+
+# Step 4: Terraform Init
 - script: |
     terraform -chdir=$(TF_WORKING_DIR) init
   displayName: 'Terraform Init'
 
-# Step 4: Terraform Format Check
+# Step 5: Terraform Format Check
 - script: |
     terraform -chdir=$(TF_WORKING_DIR) fmt -check
   displayName: 'Terraform Format Check'
 
-# Step 5: Terraform Validate
+# Step 6: Terraform Validate
 - script: |
     terraform -chdir=$(TF_WORKING_DIR) validate
   displayName: 'Terraform Validate'
 
-# Step 6: Terraform Plan
+# Step 7: Terraform Plan
 - script: |
     terraform -chdir=$(TF_WORKING_DIR) plan -out=tfplan
   displayName: 'Terraform Plan'
 
-# Step 7 (Optional): Apply
+# Step 8 (Optional): Apply
 # - script: |
 #     terraform -chdir=$(TF_WORKING_DIR) apply -auto-approve tfplan
 #   displayName: 'Terraform Apply'
