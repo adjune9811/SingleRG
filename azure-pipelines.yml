@@ -1,21 +1,30 @@
 trigger:
-- main
+  - main
 
 pool:
   vmImage: ubuntu-latest
 
 variables:
   TF_VERSION: '1.12.1'
-  TF_WORKING_DIR: './terraform'  # change if your .tf files are in another directory
+  TF_WORKING_DIR: './terraform'  # Adjust if your .tf files are elsewhere
 
 steps:
 
 # Step 1: Install Terraform v1.12.1
 - script: |
-    sudo wget https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
-    sudo unzip terraform_${TF_VERSION}_linux_amd64.zip -d /usr/local/bin/
+    set -e
+    echo "🔽 Downloading Terraform ${TF_VERSION}..."
+    wget https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+
+    echo "📦 Unzipping..."
+    unzip terraform_${TF_VERSION}_linux_amd64.zip
+
+    echo "🚚 Moving to /usr/local/bin"
+    sudo mv terraform /usr/local/bin/
+
+    echo "📌 Installed Terraform version:"
     terraform version
-  displayName: 'Install Terraform'
+  displayName: 'Install Terraform v1.12.1'
 
 # Step 2: Checkout Code
 - checkout: self
@@ -27,8 +36,8 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "✅ Logged in to Azure using SPN"
-  displayName: 'Login to Azure with Service Principal'
+      echo "✅ Successfully authenticated to Azure using service connection"
+  displayName: 'Azure Login via SPN'
 
 # Step 4: Terraform Init
 - script: |
@@ -50,7 +59,7 @@ steps:
     terraform -chdir=$(TF_WORKING_DIR) plan -out=tfplan
   displayName: 'Terraform Plan'
 
-# Step 8 (Optional): Apply
+# Step 8 (Optional): Terraform Apply
 # - script: |
 #     terraform -chdir=$(TF_WORKING_DIR) apply -auto-approve tfplan
 #   displayName: 'Terraform Apply'
