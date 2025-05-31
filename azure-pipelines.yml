@@ -6,60 +6,82 @@ pool:
 
 variables:
   TF_VERSION: '1.12.1'
-  TF_WORKING_DIR: '.'  # Your .tf file is in the root directory
+  TF_WORKING_DIR: '.'
 
 steps:
 
-# Step 1: Install Terraform v1.12.1
+# Step 1: Install Terraform
 - script: |
-    set -e
-    echo "🔽 Downloading Terraform ${TF_VERSION}..."
     wget https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
-
-    echo "📦 Unzipping..."
     unzip terraform_${TF_VERSION}_linux_amd64.zip
-
-    echo "🚚 Moving to /usr/local/bin"
     sudo mv terraform /usr/local/bin/
-
-    echo "📌 Terraform version installed:"
     terraform version
-  displayName: 'Install Terraform v1.12.1'
+  displayName: 'Install Terraform'
 
-# Step 2: Checkout code
+# Step 2: Checkout Code
 - checkout: self
 
-# Step 3: Authenticate to Azure
+# Step 3: Export SPN Credentials from Service Connection
 - task: AzureCLI@2
+  name: SetSPVars
   inputs:
     azureSubscription: 'AZ-SPN-idmay25'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "✅ Azure login successful via service connection"
-  displayName: 'Azure Login using SPN'
+      echo "Exporting Azure SPN environment variables..."
+      echo "##vso[task.setvariable variable=ARM_CLIENT_ID]$servicePrincipalId"
+      echo "##vso[task.setvariable variable=ARM_CLIENT_SECRET]$servicePrincipalKey"
+      echo "##vso[task.setvariable variable=ARM_SUBSCRIPTION_ID]$subscriptionId"
+      echo "##vso[task.setvariable variable=ARM_TENANT_ID]$tenantId"
+  displayName: 'Extract Service Principal Credentials'
 
 # Step 4: Terraform Init
 - script: |
     terraform -chdir=$(TF_WORKING_DIR) init
   displayName: 'Terraform Init'
+  env:
+    ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+    ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+    ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+    ARM_TENANT_ID: $(ARM_TENANT_ID)
 
-# ✅ Step 5: Terraform Format (Auto-Fix)
+# Step 5: Terraform Format (Auto-Fix)
 - script: |
     terraform -chdir=$(TF_WORKING_DIR) fmt
-  displayName: 'Terraform Format (Auto-Fix)'
+  displayName: 'Terraform Format'
+  env:
+    ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+    ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+    ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+    ARM_TENANT_ID: $(ARM_TENANT_ID)
 
 # Step 6: Terraform Validate
 - script: |
     terraform -chdir=$(TF_WORKING_DIR) validate
   displayName: 'Terraform Validate'
+  env:
+    ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+    ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+    ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+    ARM_TENANT_ID: $(ARM_TENANT_ID)
 
 # Step 7: Terraform Plan
 - script: |
     terraform -chdir=$(TF_WORKING_DIR) plan -out=tfplan
   displayName: 'Terraform Plan'
+  env:
+    ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+    ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+    ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+    ARM_TENANT_ID: $(ARM_TENANT_ID)
 
-# Optional Step 8: Apply the Plan
-# - script: |
-#     terraform -chdir=$(TF_WORKING_DIR) apply -auto-approve tfplan
-#   displayName: 'Terraform Apply'
+# Step 8: Terraform Apply
+- script: |
+    terraform -chdir=$(TF_WORKING_DIR) apply -auto-approve tfplan
+  displayName: 'Terraform Apply'
+  env:
+    ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+    ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+    ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+    ARM_TENANT_ID: $(ARM_TENANT_ID)
