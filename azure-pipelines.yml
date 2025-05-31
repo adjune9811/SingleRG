@@ -6,7 +6,7 @@ pool:
 
 variables:
   TF_VERSION: '1.12.1'
-  TF_WORKING_DIR: '.'  # Since main.tf is in the root
+  TF_WORKING_DIR: '.'  # Your .tf file is in the root directory
 
 steps:
 
@@ -44,10 +44,10 @@ steps:
     terraform -chdir=$(TF_WORKING_DIR) init
   displayName: 'Terraform Init'
 
-# Step 5: Terraform Format Check
+# ✅ Step 5: Terraform Format (Auto-Fix)
 - script: |
-    terraform -chdir=$(TF_WORKING_DIR) fmt -check
-  displayName: 'Terraform Format Check'
+    terraform -chdir=$(TF_WORKING_DIR) fmt
+  displayName: 'Terraform Format (Auto-Fix)'
 
 # Step 6: Terraform Validate
 - script: |
